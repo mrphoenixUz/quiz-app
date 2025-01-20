@@ -1,16 +1,17 @@
+// app/category/CategoryClient.js
 "use client";
 import FireworksContainer from "@/components/fireworks";
 import { useGetQuestionsQuery } from "@/lib/service/api";
 import { Workspaces } from "@mui/icons-material";
 import Link from "next/link";
-import { Suspense } from 'react';
 import { useParams, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
-// Separate component to handle search params
-const CategoryContent = () => {
-  const sParams = useSearchParams();
+const CategoryClient = () => {
   const { id } = useParams();
+  const searchParams = useSearchParams();
+  const difficulty = searchParams.get("difficulty");
+
   const [currentTime, setCurrentTime] = useState(150);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [currentQuestionCount, setCurrentQuestionCount] = useState(0);
@@ -21,7 +22,7 @@ const CategoryContent = () => {
   
   const { data, isLoading, error } = useGetQuestionsQuery({
     category: id,
-    difficulty: sParams.get("difficulty"),
+    difficulty: difficulty,
   });
 
   useEffect(() => {
@@ -167,19 +168,4 @@ const CategoryContent = () => {
   );
 };
 
-// Main component with Suspense boundary
-const CategoryPage = () => {
-  return (
-    <Suspense fallback={
-      <div className="p-4 md:p-10 text-center">
-        <span className="animate-spin inline-block">
-          <Workspaces fontSize="large" />
-        </span>
-      </div>
-    }>
-      <CategoryContent />
-    </Suspense>
-  );
-};
-
-export default CategoryPage;
+export default CategoryClient;
