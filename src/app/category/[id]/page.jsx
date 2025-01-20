@@ -84,9 +84,7 @@ const CategoryPage = () => {
   if (error) {
     window.location.reload();
     return (
-      <div className="text-2xl md:text-3xl lg:text-5xl text-white text-center pt-5 md:pt-10">
-        ERROR
-      </div>
+      <div className="text-2xl md:text-3xl lg:text-5xl text-white text-center pt-5 md:pt-10"></div>
     );
   }
 
