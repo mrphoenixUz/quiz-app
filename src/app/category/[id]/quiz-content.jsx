@@ -91,7 +91,7 @@ const QuizContent = () => {
 
   return (
     <div className="px-4 py-6 md:py-10">
-      {finish | currentTime == 0 && <FireworksContainer start={true} />}
+      {finish || currentTime == 0 && <FireworksContainer start={true} />}
       <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-[7rem] ${
         currentTime <= 10 && "text-red-500"
       } text-center font-bold mb-6 md:mb-10`}>
