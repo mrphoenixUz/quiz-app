@@ -1,17 +1,16 @@
-// app/category/CategoryClient.js
 "use client";
 import FireworksContainer from "@/components/fireworks";
 import { useGetQuestionsQuery } from "@/lib/service/api";
 import { Workspaces } from "@mui/icons-material";
 import Link from "next/link";
+import { Suspense } from 'react'
 import { useParams, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
-const CategoryClient = () => {
+// Separate component for the quiz content
+const QuizContent = () => {
+  const sParams = useSearchParams();
   const { id } = useParams();
-  const searchParams = useSearchParams();
-  const difficulty = searchParams.get("difficulty");
-
   const [currentTime, setCurrentTime] = useState(150);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [currentQuestionCount, setCurrentQuestionCount] = useState(0);
@@ -22,15 +21,15 @@ const CategoryClient = () => {
   
   const { data, isLoading, error } = useGetQuestionsQuery({
     category: id,
-    difficulty: difficulty,
+    difficulty: sParams.get("difficulty"),
   });
 
   useEffect(() => {
-    if (data?.results?.[0]) {
-      setCurrentQuestion(data.results[0]);
+    setCurrentQuestion(data?.results[0]);
+    if (data) {
       setVariants(shuffle([
-        ...data.results[0].incorrect_answers,
-        data.results[0].correct_answer,
+        ...data?.results[0].incorrect_answers,
+        data?.results[0].correct_answer,
       ]));
     }
   }, [data]);
@@ -53,7 +52,7 @@ const CategoryClient = () => {
 
   const checkHandler = (answer) => {
     setShowCorrect(true);
-    if (currentQuestion.correct_answer === answer) {
+    if (currentQuestion.correct_answer == answer) {
       setCorrectAnswers((prev) => prev + 1);
     }
     if (currentQuestionCount < data.results.length - 1) {
@@ -63,8 +62,8 @@ const CategoryClient = () => {
         setCurrentQuestion(data?.results[c]);
         setShowCorrect(false);
         setVariants(shuffle([
-          ...data.results[c].incorrect_answers,
-          data.results[c].correct_answer,
+          ...data?.results[c].incorrect_answers,
+          data?.results[c].correct_answer,
         ]));
       }, 1000);
     } else {
@@ -75,37 +74,32 @@ const CategoryClient = () => {
   };
 
   function shuffle(array) {
-    const newArray = [...array];
-    let currentIndex = newArray.length;
-    while (currentIndex !== 0) {
-      const randomIndex = Math.floor(Math.random() * currentIndex);
+    let currentIndex = array.length;
+    while (currentIndex != 0) {
+      let randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
-      [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
     }
-    return newArray;
+    return array;
   }
 
   if (error) {
+    window.location.reload();
     return (
-      <div className="text-center p-4">
-        <p className="text-red-500">Error loading questions. Please try again.</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-accent text-white rounded hover:bg-accent/80"
-        >
-          Reload
-        </button>
-      </div>
+      <div className="text-2xl md:text-3xl lg:text-5xl text-white text-center pt-5 md:pt-10"></div>
     );
   }
 
   return (
     <div className="px-4 py-6 md:py-10">
-      {(finish || currentTime === 0) && <FireworksContainer start={true} />}
+      {finish | currentTime == 0 && <FireworksContainer start={true} />}
       <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-[7rem] ${
-        currentTime <= 10 ? "text-red-500" : ""
+        currentTime <= 10 && "text-red-500"
       } text-center font-bold mb-6 md:mb-10`}>
-        {`${Math.floor(currentTime / 60).toString().padStart(2, '0')}:${(currentTime % 60).toString().padStart(2, '0')}`}
+        {currentTime / 60 < 10 && "0"}
+        {(currentTime / 60) | 0}:
+        {currentTime % 60 < 10 && "0"}
+        {currentTime % 60}
       </h1>
       
       <form className="relative w-full max-w-[800px] mx-auto border rounded-xl p-4 sm:p-6 md:p-10 backdrop-blur-md border-accent">
@@ -115,7 +109,7 @@ const CategoryClient = () => {
               <Workspaces fontSize="large" />
             </span>
           </div>
-        ) : finish || currentTime === 0 ? (
+        ) : finish | currentTime == 0 ? (
           <div className="p-4 md:p-10 text-center">
             <h1 className="text-lg md:text-xl font-bold">
               Correct Answers <br />
@@ -125,7 +119,7 @@ const CategoryClient = () => {
             </h1>
             <Link
               className="border border-accent rounded px-4 md:px-5 py-2 mt-4 md:mt-5 text-accent inline-block text-sm md:text-base hover:bg-accent hover:text-white transition-colors"
-              href="/"
+              href={"/"}
             >
               Go to main
             </Link>
@@ -152,7 +146,7 @@ const CategoryClient = () => {
                     type="button"
                     className={`p-2 md:p-3 text-sm md:text-base ${
                       showCorrect
-                        ? currentQuestion.correct_answer === q
+                        ? currentQuestion.correct_answer == q
                           ? "bg-green-500"
                           : "bg-red-500"
                         : "bg-secondary hover:bg-accent"
@@ -168,4 +162,19 @@ const CategoryClient = () => {
   );
 };
 
-export default CategoryClient;
+// Main component with Suspense boundary
+const CategoryPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="p-4 md:p-10 text-center">
+        <span className="animate-spin inline-block">
+          <Workspaces fontSize="large" />
+        </span>
+      </div>
+    }>
+      <QuizContent />
+    </Suspense>
+  );
+};
+
+export default CategoryPage;
